@@ -294,3 +294,7 @@ code {
     border-right-color: var(--border);
   }
 }
+
+.book-card-link:hover {
+  cursor: pointer;
+}
