@@ -14,8 +14,45 @@
     <div id="navbar-mount"></div>
 
     <main class="container py-4" id="register-page">
-      <h1 class="h3 mb-3">Register</h1>
-      <p class="text-body-secondary mb-0">Account registration page shell</p>
+      <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-5">
+          <h1 class="h3 mb-3">Create account</h1>
+          <p class="text-body-secondary mb-4">Sign up to start tracking your books.</p>
+
+          <div id="register-alert" class="alert d-none" role="alert"></div>
+
+          <form id="register-form" novalidate>
+            <div class="mb-3">
+              <label class="form-label" for="register-email">Email</label>
+              <input
+                id="register-email"
+                class="form-control"
+                type="email"
+                name="email"
+                autocomplete="email"
+                required
+              />
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label" for="register-password">Password</label>
+              <input
+                id="register-password"
+                class="form-control"
+                type="password"
+                name="password"
+                autocomplete="new-password"
+                minlength="6"
+                required
+              />
+            </div>
+
+            <button id="register-submit" type="submit" class="btn btn-primary w-100">
+              Create account
+            </button>
+          </form>
+        </div>
+      </div>
     </main>
 
     <script type="module" src="../src/pages/register.js"></script>

@@ -1,9 +1,12 @@
-export function renderNavbar(pathPrefix = "./") {
-  // TODO: Replace Login/Register with Logout when auth state is authenticated.
+import "bootstrap/dist/js/bootstrap.bundle.min.js";
+import { signOut } from "../services/authService.js";
+import { supabase } from "../services/supabaseClient.js";
+
+export function renderNavbar() {
   return `
-    <nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
       <div class="container">
-        <a class="navbar-brand fw-semibold" href="${pathPrefix}index.html">BookTrail</a>
+        <a class="navbar-brand fw-semibold" href="/index.html">BookTrail</a>
         <button
           class="navbar-toggler"
           type="button"
@@ -18,20 +21,79 @@ export function renderNavbar(pathPrefix = "./") {
         <div class="collapse navbar-collapse" id="booktrailNavbar">
           <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
             <li class="nav-item">
-              <a class="nav-link" href="${pathPrefix}index.html">Home</a>
+              <a class="nav-link" href="/index.html">Home</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="${pathPrefix}pages/library.html">My Library</a>
+              <a class="nav-link" href="/pages/library.html">My Library</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="${pathPrefix}pages/profile.html">Profile</a>
+              <a class="nav-link" href="/pages/profile.html">Profile</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="${pathPrefix}pages/login.html">Login / Register</a>
+              <a class="nav-link" href="/pages/login.html" data-auth="guest">Login</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/pages/register.html" data-auth="guest">Register</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link d-none" href="#" data-auth="auth" data-action="logout">Logout</a>
             </li>
           </ul>
         </div>
       </div>
     </nav>
   `;
+}
+
+function setAuthLinksVisibility(mountNode, hasSession) {
+  const guestLinks = mountNode.querySelectorAll('[data-auth="guest"]');
+  const authLinks = mountNode.querySelectorAll('[data-auth="auth"]');
+
+  guestLinks.forEach((link) => {
+    link.classList.toggle("d-none", hasSession);
+  });
+
+  authLinks.forEach((link) => {
+    link.classList.toggle("d-none", !hasSession);
+  });
+}
+
+export function mountNavbar(mountNode) {
+  if (!mountNode) {
+    return;
+  }
+
+  mountNode.innerHTML = renderNavbar();
+
+  const logoutLink = mountNode.querySelector('[data-action="logout"]');
+
+  if (!logoutLink) {
+    return;
+  }
+
+  logoutLink.addEventListener("click", async (event) => {
+    event.preventDefault();
+
+    try {
+      await signOut();
+      window.location.href = "/index.html";
+    } catch (error) {
+      // Keep shell simple for now; auth error handling UI can be centralized later.
+      console.error("Sign out failed", error);
+    }
+  });
+
+  const syncAuthState = async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    setAuthLinksVisibility(mountNode, Boolean(session));
+  };
+
+  syncAuthState();
+
+  supabase.auth.onAuthStateChange((_event, session) => {
+    setAuthLinksVisibility(mountNode, Boolean(session));
+  });
 }
