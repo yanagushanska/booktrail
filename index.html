@@ -22,8 +22,28 @@
           </p>
         </div>
       </div>
+
+      <section aria-labelledby="catalog-heading">
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-3">
+          <h2 id="catalog-heading" class="h4 mb-0">Browse Books</h2>
+          <div class="w-100 w-md-50">
+            <label class="form-label visually-hidden" for="book-search">Search books</label>
+            <input
+              id="book-search"
+              type="text"
+              class="form-control"
+              placeholder="Search by title or author"
+              autocomplete="off"
+            />
+          </div>
+        </div>
+
+        <div id="books-alert" class="alert d-none" role="alert"></div>
+
+        <div id="book-grid" class="row g-3" aria-live="polite"></div>
+      </section>
     </main>
 
-    <script type="module" src="./src/pages/index.js"></script>
+    <script type="module" src="./src/main.js"></script>
   </body>
 </html>
