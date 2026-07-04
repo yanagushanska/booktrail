@@ -15,7 +15,83 @@
 
     <main class="container py-4" id="library-page">
       <h1 class="h3 mb-3">My Library</h1>
-      <p class="text-body-secondary mb-0">Personal library page shell</p>
+
+      <div id="library-alert" class="alert d-none" role="alert"></div>
+
+      <ul class="nav nav-tabs mb-3" id="library-tabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link active"
+            id="want-to-read-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#want-to-read-pane"
+            type="button"
+            role="tab"
+            aria-controls="want-to-read-pane"
+            aria-selected="true"
+          >
+            Want to Read
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link"
+            id="reading-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#reading-pane"
+            type="button"
+            role="tab"
+            aria-controls="reading-pane"
+            aria-selected="false"
+          >
+            Reading
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link"
+            id="finished-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#finished-pane"
+            type="button"
+            role="tab"
+            aria-controls="finished-pane"
+            aria-selected="false"
+          >
+            Finished
+          </button>
+        </li>
+      </ul>
+
+      <div class="tab-content" id="library-tab-content">
+        <section
+          class="tab-pane fade show active"
+          id="want-to-read-pane"
+          role="tabpanel"
+          aria-labelledby="want-to-read-tab"
+          tabindex="0"
+        >
+          <div id="want-to-read-list" class="row g-3"></div>
+        </section>
+        <section
+          class="tab-pane fade"
+          id="reading-pane"
+          role="tabpanel"
+          aria-labelledby="reading-tab"
+          tabindex="0"
+        >
+          <div id="reading-list" class="row g-3"></div>
+        </section>
+        <section
+          class="tab-pane fade"
+          id="finished-pane"
+          role="tabpanel"
+          aria-labelledby="finished-tab"
+          tabindex="0"
+        >
+          <div id="finished-list" class="row g-3"></div>
+        </section>
+      </div>
     </main>
 
     <script type="module" src="../src/pages/library.js"></script>
