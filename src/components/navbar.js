@@ -4,7 +4,7 @@ import { supabase } from "../services/supabaseClient.js";
 
 export function renderNavbar() {
   return `
-    <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+    <nav class="navbar navbar-expand-md navbar-light bg-light border-bottom">
       <div class="container">
         <a class="navbar-brand fw-semibold" href="/index.html">BookTrail</a>
         <button
@@ -19,7 +19,7 @@ export function renderNavbar() {
           <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="booktrailNavbar">
-          <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+          <ul class="navbar-nav ms-auto mb-2 mb-md-0">
             <li class="nav-item">
               <a class="nav-link" href="/index.html">Home</a>
             </li>

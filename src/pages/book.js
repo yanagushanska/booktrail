@@ -255,7 +255,7 @@ async function renderReviewForm(bookId) {
 							<label for="review-text" class="form-label">Review</label>
 							<textarea id="review-text" class="form-control" rows="4" placeholder="Share your thoughts"></textarea>
 						</div>
-						<button id="review-submit-button" type="submit" class="btn btn-primary">Submit Review</button>
+						<button id="review-submit-button" type="submit" class="btn btn-primary w-100 w-md-auto">Submit Review</button>
 					</form>
 				</div>
 			</section>

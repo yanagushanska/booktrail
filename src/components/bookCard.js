@@ -14,7 +14,7 @@ export function renderBookCard(book) {
   const description = escapeHtml(book?.description || "No description available yet.");
 
   return `
-    <div class="col-12 col-sm-6 col-lg-4">
+    <div class="col-12 col-md-6 col-lg-4">
       <a
         href="/pages/book.html?id=${id}"
         class="book-card-link text-decoration-none text-reset d-block h-100"
