@@ -1,6 +1,7 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import { mountNavbar } from "../components/navbar.js";
 import { getCurrentUser } from "../services/authService.js";
+import { getAllUsersWithRoles, updateUserRole } from "../services/adminService.js";
 import { createBook, deleteBook, getAllBooks, updateBook } from "../services/booksService.js";
 import { supabase } from "../services/supabaseClient.js";
 import { uploadBookCover } from "../services/storageService.js";
@@ -17,9 +18,11 @@ const coverFileInput = document.querySelector("#book-cover-file");
 const coverPreview = document.querySelector("#book-cover-preview");
 const submitButton = document.querySelector("#add-book-submit");
 const booksTableBody = document.querySelector("#books-table-body");
+const usersTableBody = document.querySelector("#users-table-body");
 
 let selectedCoverFile = null;
 let booksCache = [];
+let usersCache = [];
 let isPermissionLoading = false;
 
 mountNavbar(navbarMount);
@@ -94,6 +97,34 @@ function renderBooksTable(items) {
 		.join("");
 }
 
+function renderUsersTable(items) {
+	if (!usersTableBody) {
+		return;
+	}
+
+	if (!items.length) {
+		usersTableBody.innerHTML =
+			'<tr><td colspan="2" class="text-body-secondary">No users found.</td></tr>';
+		return;
+	}
+
+	usersTableBody.innerHTML = items
+		.map(
+			(user) => `
+			<tr>
+				<td>${user.username ?? user.email ?? user.id}</td>
+				<td>
+					<select class="form-select form-select-sm" data-user-role-select data-user-id="${user.id}">
+						<option value="user" ${user.role === "user" ? "selected" : ""}>user</option>
+						<option value="admin" ${user.role === "admin" ? "selected" : ""}>admin</option>
+					</select>
+				</td>
+			</tr>
+		`,
+		)
+		.join("");
+}
+
 async function loadBooksTable() {
 	if (!booksTableBody) {
 		return;
@@ -109,6 +140,25 @@ async function loadBooksTable() {
 		booksTableBody.innerHTML =
 			'<tr><td colspan="4" class="text-danger">Failed to load books.</td></tr>';
 		showAlert(error.message || "Failed to load books.");
+	}
+}
+
+async function loadUsersTable() {
+	if (!usersTableBody) {
+		return;
+	}
+
+	usersTableBody.innerHTML =
+		'<tr><td colspan="2" class="text-body-secondary">Loading users...</td></tr>';
+
+	try {
+		usersCache = await getAllUsersWithRoles();
+		console.log("[Admin Users:getAllUsersWithRoles result]", usersCache);
+		renderUsersTable(usersCache);
+	} catch (error) {
+		usersTableBody.innerHTML =
+			'<tr><td colspan="2" class="text-danger">Failed to load users.</td></tr>';
+		showAlert(error.message || "Failed to load users.");
 	}
 }
 
@@ -263,6 +313,36 @@ if (booksTableBody) {
 	});
 }
 
+if (usersTableBody) {
+	usersTableBody.addEventListener("change", async (event) => {
+		const target = event.target;
+
+		if (!(target instanceof HTMLSelectElement) || !target.matches("[data-user-role-select]")) {
+			return;
+		}
+
+		const userId = target.dataset.userId;
+		const nextRole = target.value;
+
+		if (!userId || !nextRole) {
+			return;
+		}
+
+		target.disabled = true;
+
+		try {
+			await updateUserRole(userId, nextRole);
+			showAlert(`Role updated to ${nextRole}.`, "success");
+			await loadUsersTable();
+		} catch (error) {
+			showAlert(error.message || "Failed to update role.");
+			await loadUsersTable();
+		} finally {
+			target.disabled = false;
+		}
+	});
+}
+
 async function initAdminPage() {
 	if (!content) {
 		return;
@@ -304,7 +384,7 @@ async function initAdminPage() {
 
 		hideAlert();
 		content.classList.remove("d-none");
-		await loadBooksTable();
+		await Promise.all([loadBooksTable(), loadUsersTable()]);
 	} catch (error) {
 		content.classList.add("d-none");
 		showAlert(error.message || "Access is restricted.", "warning");
