@@ -3,8 +3,10 @@ import { mountNavbar } from "../components/navbar.js";
 import { getCurrentUser } from "../services/authService.js";
 import { getAllUsersWithRoles, updateUserRole } from "../services/adminService.js";
 import { createBook, deleteBook, getAllBooks, updateBook } from "../services/booksService.js";
-import { supabase } from "../services/supabaseClient.js";
 import { uploadBookCover } from "../services/storageService.js";
+import { requireAdmin } from "../utils/roleGuard.js";
+
+await requireAdmin();
 
 const navbarMount = document.querySelector("#navbar-mount");
 const alertBox = document.querySelector("#admin-alert");
@@ -354,29 +356,6 @@ async function initAdminPage() {
 		const user = await getCurrentUser();
 
 		if (!user?.id) {
-			content.classList.add("d-none");
-			showAlert("Access is restricted.", "warning");
-			return;
-		}
-
-		const { data, error } = await supabase
-			.from("user_roles")
-			.select("role")
-			.eq("user_id", user.id)
-			.maybeSingle();
-
-		console.log("[Admin Check:user_roles raw result]", {
-			data,
-			error,
-		});
-
-		if (error) {
-			throw error;
-		}
-
-		const role = data?.role ?? null;
-
-		if (role !== "admin") {
 			content.classList.add("d-none");
 			showAlert("Access is restricted.", "warning");
 			return;

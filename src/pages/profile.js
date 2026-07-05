@@ -2,6 +2,9 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { mountNavbar } from "../components/navbar.js";
 import { supabase } from "../services/supabaseClient.js";
 import { uploadAvatar } from "../services/storageService.js";
+import { requireAuth } from "../utils/roleGuard.js";
+
+await requireAuth();
 
 const navbarMount = document.querySelector("#navbar-mount");
 mountNavbar(navbarMount);

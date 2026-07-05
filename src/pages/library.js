@@ -1,6 +1,9 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import { mountNavbar } from "../components/navbar.js";
 import { getUserBooks, updateStatus } from "../services/libraryService.js";
+import { requireAuth } from "../utils/roleGuard.js";
+
+await requireAuth();
 
 const navbarMount = document.querySelector("#navbar-mount");
 const page = document.querySelector("#library-page");
