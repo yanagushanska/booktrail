@@ -23,6 +23,60 @@
         </div>
       </div>
 
+      <section id="home-add-book-section" class="card shadow-sm mb-4 d-none" style="max-width: 720px">
+        <div class="card-body">
+          <h2 class="h5 mb-3">Add Book (Admin)</h2>
+          <div id="home-add-book-alert" class="alert d-none" role="alert"></div>
+
+          <form id="home-add-book-form" class="vstack gap-3">
+            <div>
+              <label class="form-label" for="home-book-title">Title</label>
+              <input class="form-control" id="home-book-title" type="text" required />
+            </div>
+
+            <div>
+              <label class="form-label" for="home-book-author">Author</label>
+              <input class="form-control" id="home-book-author" type="text" required />
+            </div>
+
+            <div>
+              <label class="form-label" for="home-book-genre">Genre</label>
+              <input class="form-control" id="home-book-genre" type="text" />
+            </div>
+
+            <div>
+              <label class="form-label" for="home-book-description">Description</label>
+              <textarea class="form-control" id="home-book-description" rows="3"></textarea>
+            </div>
+
+            <div>
+              <label class="form-label" for="home-book-cover-file">Cover Image</label>
+              <input
+                class="form-control"
+                id="home-book-cover-file"
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                required
+              />
+            </div>
+
+            <img
+              id="home-book-cover-preview"
+              src="https://placehold.co/240x320?text=Cover+Preview"
+              alt="Book cover preview"
+              class="rounded border"
+              width="240"
+              height="320"
+              style="object-fit: cover"
+            />
+
+            <button id="home-add-book-submit" type="submit" class="btn btn-primary align-self-start">
+              Add Book
+            </button>
+          </form>
+        </div>
+      </section>
+
       <section aria-labelledby="catalog-heading">
         <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-3">
           <h2 id="catalog-heading" class="h4 mb-0">Browse Books</h2>

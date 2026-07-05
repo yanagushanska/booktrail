@@ -23,3 +23,28 @@ export async function getBookById(id) {
 
   return data;
 }
+
+export async function createBook({ title, author, genre, description }) {
+  const payload = {
+    title: title?.trim(),
+    author: author?.trim(),
+    genre: genre?.trim() || null,
+    description: description?.trim() || null,
+  };
+
+  if (!payload.title || !payload.author) {
+    throw new Error("Title and author are required.");
+  }
+
+  const { data, error } = await supabase
+    .from("books")
+    .insert(payload)
+    .select("*")
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}

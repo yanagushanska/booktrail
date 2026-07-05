@@ -15,7 +15,60 @@
 
     <main class="container py-4" id="admin-page">
       <h1 class="h3 mb-3">Admin</h1>
-      <p class="text-body-secondary mb-0">Admin page shell</p>
+      <div id="admin-alert" class="alert alert-info" role="alert">Checking permissions...</div>
+
+      <section id="add-book-section" class="card shadow-sm d-none" style="max-width: 720px">
+        <div class="card-body">
+          <h2 class="h5 mb-3">Add Book</h2>
+
+          <form id="add-book-form" class="vstack gap-3">
+            <div>
+              <label class="form-label" for="book-title">Title</label>
+              <input class="form-control" id="book-title" type="text" required />
+            </div>
+
+            <div>
+              <label class="form-label" for="book-author">Author</label>
+              <input class="form-control" id="book-author" type="text" required />
+            </div>
+
+            <div>
+              <label class="form-label" for="book-genre">Genre</label>
+              <input class="form-control" id="book-genre" type="text" />
+            </div>
+
+            <div>
+              <label class="form-label" for="book-description">Description</label>
+              <textarea class="form-control" id="book-description" rows="4"></textarea>
+            </div>
+
+            <div>
+              <label class="form-label" for="book-cover-file">Cover Image</label>
+              <input
+                class="form-control"
+                id="book-cover-file"
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                required
+              />
+            </div>
+
+            <img
+              id="book-cover-preview"
+              src="https://placehold.co/240x320?text=Cover+Preview"
+              alt="Book cover preview"
+              class="rounded border"
+              width="240"
+              height="320"
+              style="object-fit: cover"
+            />
+
+            <button id="add-book-submit" type="submit" class="btn btn-primary align-self-start">
+              Add Book
+            </button>
+          </form>
+        </div>
+      </section>
     </main>
 
     <script type="module" src="../src/pages/admin.js"></script>
