@@ -1,4 +1,5 @@
 import "bootstrap/dist/css/bootstrap.min.css";
+import "../styles/main.css";
 import { mountNavbar } from "../components/navbar.js";
 import { getBookById } from "../services/booksService.js";
 import { addToLibrary } from "../services/libraryService.js";
@@ -26,8 +27,19 @@ function showAlert(message, type = "danger") {
 		return;
 	}
 
-	alertBox.className = `alert alert-${type}`;
-	alertBox.textContent = message;
+	alertBox.className = `alert alert-${type} alert-dismissible fade show`;
+	alertBox.innerHTML = "";
+
+	const messageNode = document.createElement("span");
+	messageNode.textContent = message;
+
+	const closeButton = document.createElement("button");
+	closeButton.type = "button";
+	closeButton.className = "btn-close";
+	closeButton.setAttribute("data-bs-dismiss", "alert");
+	closeButton.setAttribute("aria-label", "Close");
+
+	alertBox.append(messageNode, closeButton);
 }
 
 function hideAlert() {
@@ -36,7 +48,17 @@ function hideAlert() {
 	}
 
 	alertBox.className = "alert d-none";
-	alertBox.textContent = "";
+	alertBox.innerHTML = "";
+}
+
+function renderStaticStars(rating) {
+	const normalizedRating = Number(rating) || 0;
+
+	return Array.from({ length: 5 }, (_unused, index) => {
+		const isFilled = index < normalizedRating;
+		const iconClass = isFilled ? "bi-star-fill text-warning" : "bi-star text-warning";
+		return `<i class="bi ${iconClass}" aria-hidden="true"></i>`;
+	}).join("");
 }
 
 function renderBookDetails(book) {
@@ -69,8 +91,8 @@ function renderBookDetails(book) {
 						<h1 class="h3 mb-2">${title}</h1>
 						<p class="text-body-secondary mb-3">by ${author}</p>
 						<div class="d-flex flex-wrap gap-2 mb-3">
-							<span class="badge text-bg-secondary">Genre: ${genre}</span>
-							<span class="badge text-bg-secondary">Published: ${year}</span>
+							<span class="badge badge-oxblood-soft">Genre: ${genre}</span>
+							<span class="badge badge-oxblood-soft">Published: ${year}</span>
 						</div>
 						<p class="mb-4">${description}</p>
 						<button id="add-to-library-button" type="button" class="btn btn-primary">Add to Library</button>
@@ -123,14 +145,14 @@ function renderReviewItems(container, reviews) {
 
 	if (!reviews.length) {
 		container.innerHTML =
-			'<div class="alert alert-secondary mb-0">No reviews yet. Be the first to leave one.</div>';
+			'<div class="alert empty-state-box mb-0 d-flex align-items-center gap-2"><i class="bi bi-chat-left-dots empty-state-icon" aria-hidden="true"></i><span>No reviews yet. Be the first to leave one.</span></div>';
 		return;
 	}
 
 	container.innerHTML = reviews
 		.map((review) => {
 			const text = escapeHtml(review.review_text || "No written review provided.");
-			const rating = escapeHtml(review.rating);
+			const rating = Number(review.rating) || 0;
 			const createdAt = review.created_at
 				? new Date(review.created_at).toLocaleString()
 				: "Unknown date";
@@ -139,7 +161,7 @@ function renderReviewItems(container, reviews) {
 				<article class="card mb-2 shadow-sm">
 					<div class="card-body py-3">
 						<div class="d-flex justify-content-between align-items-center mb-2">
-							<strong>Rating: ${rating}/5</strong>
+							<div class="d-flex align-items-center gap-1" aria-label="Rating ${rating} out of 5">${renderStaticStars(rating)}</div>
 							<small class="text-body-secondary">${escapeHtml(createdAt)}</small>
 						</div>
 						<p class="mb-0">${text}</p>
@@ -161,7 +183,7 @@ async function refreshReviewList(bookId) {
 		return;
 	}
 
-	listMount.innerHTML = '<div class="alert alert-info mb-0">Loading reviews...</div>';
+	listMount.innerHTML = '<div class="alert alert-info mb-0 d-flex align-items-center gap-2"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span><span>Loading reviews...</span></div>';
 
 	try {
 		const reviews = await getReviewsByBookId(bookId);
@@ -181,6 +203,7 @@ function wireReviewForm(bookId) {
 	const textInput = reviewSectionMount.querySelector("#review-text");
 	const submitButton = reviewSectionMount.querySelector("#review-submit-button");
 	const submitAlert = reviewSectionMount.querySelector("#review-submit-alert");
+	const starButtons = reviewSectionMount.querySelectorAll("[data-star-value]");
 
 	if (!form || !ratingInput || !textInput || !submitButton || !submitAlert) {
 		return;
@@ -188,10 +211,33 @@ function wireReviewForm(bookId) {
 
 	const defaultButtonHtml = submitButton.innerHTML;
 
+	const paintInputStars = (currentRating) => {
+		starButtons.forEach((button) => {
+			const starValue = Number(button.dataset.starValue);
+			const icon = button.querySelector("i");
+
+			if (!icon) {
+				return;
+			}
+
+			icon.className = `bi ${starValue <= currentRating ? "bi-star-fill" : "bi-star"} text-warning fs-4`;
+		});
+	};
+
+	starButtons.forEach((button) => {
+		button.addEventListener("click", () => {
+			const nextRating = Number(button.dataset.starValue);
+			ratingInput.value = String(nextRating);
+			paintInputStars(nextRating);
+		});
+	});
+
+	paintInputStars(Number(ratingInput.value) || 0);
+
 	form.addEventListener("submit", async (event) => {
 		event.preventDefault();
 		submitAlert.className = "alert d-none";
-		submitAlert.textContent = "";
+		submitAlert.innerHTML = "";
 
 		submitButton.disabled = true;
 		submitButton.innerHTML =
@@ -200,10 +246,14 @@ function wireReviewForm(bookId) {
 		try {
 			await addReview(bookId, textInput.value, ratingInput.value);
 			form.reset();
+			paintInputStars(0);
 			await refreshReviewList(bookId);
 		} catch (error) {
-			submitAlert.className = "alert alert-danger";
-			submitAlert.textContent = error.message || "Failed to submit review.";
+			submitAlert.className = "alert alert-danger alert-dismissible fade show";
+			submitAlert.innerHTML = `
+				<span>${escapeHtml(error.message || "Failed to submit review.")}</span>
+				<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+			`;
 		} finally {
 			submitButton.disabled = false;
 			submitButton.innerHTML = defaultButtonHtml;
@@ -217,7 +267,7 @@ async function renderReviewForm(bookId) {
 		return;
 	}
 
-	renderReviewSection('<div class="alert alert-info mb-0">Loading review form...</div>');
+	renderReviewSection('<div class="alert alert-info mb-0 d-flex align-items-center gap-2"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span><span>Loading review form...</span></div>');
 
 	const {
 		data: { session },
@@ -242,14 +292,14 @@ async function renderReviewForm(bookId) {
 						<div id="review-submit-alert" class="alert d-none" role="alert"></div>
 						<div class="mb-3">
 							<label for="review-rating" class="form-label">Rating</label>
-							<select id="review-rating" class="form-select" required>
-								<option value="">Select rating</option>
-								<option value="1">1</option>
-								<option value="2">2</option>
-								<option value="3">3</option>
-								<option value="4">4</option>
-								<option value="5">5</option>
-							</select>
+							<input id="review-rating" type="hidden" value="" required />
+							<div class="d-flex align-items-center gap-1" role="group" aria-label="Choose rating">
+								<button type="button" class="btn btn-link text-decoration-none p-0" data-star-value="1" aria-label="Rate 1 star"><i class="bi bi-star text-warning fs-4" aria-hidden="true"></i></button>
+								<button type="button" class="btn btn-link text-decoration-none p-0" data-star-value="2" aria-label="Rate 2 stars"><i class="bi bi-star text-warning fs-4" aria-hidden="true"></i></button>
+								<button type="button" class="btn btn-link text-decoration-none p-0" data-star-value="3" aria-label="Rate 3 stars"><i class="bi bi-star text-warning fs-4" aria-hidden="true"></i></button>
+								<button type="button" class="btn btn-link text-decoration-none p-0" data-star-value="4" aria-label="Rate 4 stars"><i class="bi bi-star text-warning fs-4" aria-hidden="true"></i></button>
+								<button type="button" class="btn btn-link text-decoration-none p-0" data-star-value="5" aria-label="Rate 5 stars"><i class="bi bi-star text-warning fs-4" aria-hidden="true"></i></button>
+							</div>
 						</div>
 						<div class="mb-3">
 							<label for="review-text" class="form-label">Review</label>
@@ -300,7 +350,7 @@ async function loadBook() {
 		return;
 	}
 
-	detailsMount.innerHTML = '<div class="alert alert-info mb-0">Loading book details...</div>';
+	detailsMount.innerHTML = '<div class="alert alert-info mb-0 d-flex align-items-center gap-2"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span><span>Loading book details...</span></div>';
 
 	try {
 		const book = await getBookById(id);

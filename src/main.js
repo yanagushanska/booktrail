@@ -1,5 +1,6 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./style.css";
+import "./styles/main.css";
 import { mountNavbar } from "./components/navbar.js";
 import { renderBookCard } from "./components/bookCard.js";
 import { createBook, getAllBooks } from "./services/booksService.js";
@@ -31,8 +32,19 @@ function showAlert(message, type = "danger") {
 		return;
 	}
 
-	booksAlert.className = `alert alert-${type}`;
-	booksAlert.textContent = message;
+	booksAlert.className = `alert alert-${type} alert-dismissible fade show`;
+	booksAlert.innerHTML = "";
+
+	const messageNode = document.createElement("span");
+	messageNode.textContent = message;
+
+	const closeButton = document.createElement("button");
+	closeButton.type = "button";
+	closeButton.className = "btn-close";
+	closeButton.setAttribute("data-bs-dismiss", "alert");
+	closeButton.setAttribute("aria-label", "Close");
+
+	booksAlert.append(messageNode, closeButton);
 }
 
 function hideAlert() {
@@ -49,8 +61,19 @@ function showAddBookAlert(message, type = "danger") {
 		return;
 	}
 
-	addBookAlert.className = `alert alert-${type}`;
-	addBookAlert.textContent = message;
+	addBookAlert.className = `alert alert-${type} alert-dismissible fade show`;
+	addBookAlert.innerHTML = "";
+
+	const messageNode = document.createElement("span");
+	messageNode.textContent = message;
+
+	const closeButton = document.createElement("button");
+	closeButton.type = "button";
+	closeButton.className = "btn-close";
+	closeButton.setAttribute("data-bs-dismiss", "alert");
+	closeButton.setAttribute("aria-label", "Close");
+
+	addBookAlert.append(messageNode, closeButton);
 }
 
 function hideAddBookAlert() {
@@ -83,7 +106,7 @@ function renderBooks(items) {
 
 	if (!items.length) {
 		bookGrid.innerHTML =
-			'<div class="col-12"><div class="alert alert-secondary mb-0">No books found.</div></div>';
+			'<div class="col-12"><div class="alert empty-state-box mb-0 d-flex align-items-center gap-2"><i class="bi bi-inbox empty-state-icon" aria-hidden="true"></i><span>No books found.</span></div></div>';
 		return;
 	}
 
@@ -97,7 +120,7 @@ async function loadBooks() {
 
 	hideAlert();
 	bookGrid.innerHTML =
-		'<div class="col-12"><div class="alert alert-info mb-0">Loading books...</div></div>';
+		'<div class="col-12"><div class="alert alert-info mb-0 d-flex align-items-center gap-2"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span><span>Loading books...</span></div></div>';
 
 	try {
 		books = await getAllBooks();

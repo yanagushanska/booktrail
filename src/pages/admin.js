@@ -1,4 +1,5 @@
 import "bootstrap/dist/css/bootstrap.min.css";
+import "../styles/main.css";
 import { mountNavbar } from "../components/navbar.js";
 import { getCurrentUser } from "../services/authService.js";
 import { getAllUsersWithRoles, updateUserRole } from "../services/adminService.js";
@@ -34,8 +35,19 @@ function showAlert(message, type = "danger") {
 		return;
 	}
 
-	alertBox.className = `alert alert-${type}`;
-	alertBox.textContent = message;
+	alertBox.className = `alert alert-${type} alert-dismissible fade show`;
+	alertBox.innerHTML = "";
+
+	const messageNode = document.createElement("span");
+	messageNode.textContent = message;
+
+	const closeButton = document.createElement("button");
+	closeButton.type = "button";
+	closeButton.className = "btn-close";
+	closeButton.setAttribute("data-bs-dismiss", "alert");
+	closeButton.setAttribute("aria-label", "Close");
+
+	alertBox.append(messageNode, closeButton);
 }
 
 function hideAlert() {
@@ -76,7 +88,7 @@ function renderBooksTable(items) {
 
 	if (!items.length) {
 		booksTableBody.innerHTML =
-			'<tr><td colspan="4" class="text-body-secondary">No books found.</td></tr>';
+			'<tr><td colspan="4"><div class="alert empty-state-box mb-0 d-flex align-items-center gap-2"><i class="bi bi-inbox empty-state-icon" aria-hidden="true"></i><span>No books found.</span></div></td></tr>';
 		return;
 	}
 
@@ -106,7 +118,7 @@ function renderUsersTable(items) {
 
 	if (!items.length) {
 		usersTableBody.innerHTML =
-			'<tr><td colspan="2" class="text-body-secondary">No users found.</td></tr>';
+			'<tr><td colspan="2"><div class="alert empty-state-box mb-0 d-flex align-items-center gap-2"><i class="bi bi-people empty-state-icon" aria-hidden="true"></i><span>No users found.</span></div></td></tr>';
 		return;
 	}
 
@@ -133,7 +145,7 @@ async function loadBooksTable() {
 	}
 
 	booksTableBody.innerHTML =
-		'<tr><td colspan="4" class="text-body-secondary">Loading books...</td></tr>';
+		'<tr><td colspan="4" class="text-body-secondary"><div class="d-flex align-items-center gap-2"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span><span>Loading books...</span></div></td></tr>';
 
 	try {
 		booksCache = await getAllBooks();
@@ -151,7 +163,7 @@ async function loadUsersTable() {
 	}
 
 	usersTableBody.innerHTML =
-		'<tr><td colspan="2" class="text-body-secondary">Loading users...</td></tr>';
+		'<tr><td colspan="2" class="text-body-secondary"><div class="d-flex align-items-center gap-2"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span><span>Loading users...</span></div></td></tr>';
 
 	try {
 		usersCache = await getAllUsersWithRoles();

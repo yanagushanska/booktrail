@@ -1,0 +1,133 @@
+:root {
+  --ink: #22201d;
+  --parchment: #f6f1e7;
+  --parchment-soft: #efe7d9;
+  --card-surface: #ffffff;
+  --oxblood: #6e2a33;
+  --forest: #3f5d4b;
+  --taupe-border: #d8cfc0;
+
+  --bs-primary: var(--oxblood);
+  --bs-primary-rgb: 110, 42, 51;
+  --bs-body-bg: var(--parchment);
+  --bs-body-color: var(--ink);
+  --bs-border-color: var(--taupe-border);
+  --bs-link-color: var(--oxblood);
+}
+
+html,
+body {
+  min-height: 100%;
+  background-color: var(--parchment);
+}
+
+body {
+  font-family: "Inter", sans-serif;
+  background-color: var(--parchment) !important;
+  min-height: 100vh;
+  margin: 0;
+}
+
+h1,
+h2,
+h3,
+.navbar-brand {
+  font-family: "Fraunces", serif;
+}
+
+.navbar-brand {
+  font-weight: 700;
+  color: var(--oxblood) !important;
+  font-size: 1.35rem;
+}
+
+.navbar-custom {
+  background-color: var(--parchment) !important;
+  border-bottom: 1px solid var(--taupe-border);
+}
+
+.btn-primary {
+  --bs-btn-bg: var(--oxblood);
+  --bs-btn-border-color: var(--oxblood);
+  --bs-btn-hover-bg: #5a232b;
+  --bs-btn-hover-border-color: #5a232b;
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--oxblood);
+  --bs-btn-border-color: var(--oxblood);
+  --bs-btn-hover-bg: var(--oxblood);
+  --bs-btn-hover-border-color: var(--oxblood);
+}
+
+.card {
+  background-color: var(--card-surface);
+  border: 1px solid var(--taupe-border);
+}
+
+.status-badge--want {
+  background-color: var(--taupe-border);
+  color: var(--ink);
+}
+
+.status-badge--reading {
+  background-color: var(--oxblood);
+  color: #fff;
+}
+
+.status-badge--finished {
+  background-color: var(--forest);
+  color: #fff;
+}
+
+.badge-oxblood-soft {
+  background-color: rgba(110, 42, 51, 0.14);
+  color: var(--oxblood);
+  border: 1px solid rgba(110, 42, 51, 0.2);
+}
+
+.book-card {
+  background-color: var(--card-surface);
+  border: 1px solid var(--taupe-border);
+  border-radius: 0.75rem;
+  box-shadow: none;
+  transition: box-shadow 0.2s ease;
+}
+
+.book-card-link:hover .book-card,
+.book-card-link:focus-visible .book-card {
+  box-shadow: 0 0.45rem 1rem rgba(34, 32, 29, 0.12);
+}
+
+.book-card-media {
+  height: 240px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--taupe-border);
+}
+
+.book-card-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.book-card-placeholder {
+  width: 100%;
+  height: 100%;
+  background-color: var(--parchment-soft);
+  color: var(--oxblood);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-state-box {
+  background-color: var(--parchment-soft);
+  border: 1px solid var(--taupe-border);
+  color: var(--ink);
+}
+
+.empty-state-icon {
+  color: var(--oxblood);
+}

@@ -1,4 +1,5 @@
 import "bootstrap/dist/css/bootstrap.min.css";
+import "../styles/main.css";
 import { mountNavbar } from "../components/navbar.js";
 import { getUserBooks, updateStatus } from "../services/libraryService.js";
 import { requireAuth } from "../utils/roleGuard.js";
@@ -34,8 +35,19 @@ function showAlert(message, type = "danger") {
 		return;
 	}
 
-	alertBox.className = `alert alert-${type}`;
-	alertBox.textContent = message;
+	alertBox.className = `alert alert-${type} alert-dismissible fade show`;
+	alertBox.innerHTML = "";
+
+	const messageNode = document.createElement("span");
+	messageNode.textContent = message;
+
+	const closeButton = document.createElement("button");
+	closeButton.type = "button";
+	closeButton.className = "btn-close";
+	closeButton.setAttribute("data-bs-dismiss", "alert");
+	closeButton.setAttribute("aria-label", "Close");
+
+	alertBox.append(messageNode, closeButton);
 }
 
 function hideAlert() {
@@ -53,7 +65,19 @@ function renderLoadingState(container) {
 	}
 
 	container.innerHTML =
-		'<div class="col-12"><div class="alert alert-info mb-0">Loading...</div></div>';
+		'<div class="col-12"><div class="alert alert-info mb-0 d-flex align-items-center gap-2"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span><span>Loading...</span></div></div>';
+}
+
+function getStatusBadgeClass(status) {
+	if (status === "reading") {
+		return "status-badge--reading";
+	}
+
+	if (status === "finished") {
+		return "status-badge--finished";
+	}
+
+	return "status-badge--want";
 }
 
 function renderStatusList(container, entries, emptyMessage) {
@@ -62,7 +86,7 @@ function renderStatusList(container, entries, emptyMessage) {
 	}
 
 	if (!entries.length) {
-		container.innerHTML = `<div class="col-12"><div class="alert alert-secondary mb-0">${emptyMessage}</div></div>`;
+		container.innerHTML = `<div class="col-12"><div class="alert empty-state-box mb-0 d-flex align-items-center gap-2"><i class="bi bi-inbox empty-state-icon" aria-hidden="true"></i><span>${emptyMessage}</span></div></div>`;
 		return;
 	}
 
@@ -73,16 +97,29 @@ function renderStatusList(container, entries, emptyMessage) {
 			const title = escapeHtml(book.title || "Untitled");
 			const author = escapeHtml(book.author || "Unknown author");
 			const description = escapeHtml(book.description || "No description available.");
+			const coverUrl = book.cover_url ? escapeHtml(book.cover_url) : "";
+			const statusLabel = escapeHtml(STATUS_LABELS[entry.status] || "Want to Read");
+			const statusBadgeClass = getStatusBadgeClass(entry.status);
 
 			return `
 				<div class="col-12 col-md-6 col-lg-4">
-					<article class="card h-100 shadow-sm">
+					<article class="card book-card h-100">
+						<div class="book-card-media">
+							${
+								coverUrl
+									? `<img src="${coverUrl}" alt="Cover for ${title}" class="book-card-cover" />`
+									: '<div class="book-card-placeholder"><i class="bi bi-book fs-2" aria-hidden="true"></i></div>'
+							}
+						</div>
 						<div class="card-body d-flex flex-column">
 							<h2 class="h5 card-title mb-2">${title}</h2>
 							<p class="text-body-secondary mb-2">by ${author}</p>
 							<p class="card-text mb-3">${description}</p>
 							<div class="mt-auto d-flex flex-column gap-2">
-								<label class="form-label mb-0 small" for="status-${entry.id}">Status</label>
+								<div class="d-flex align-items-center justify-content-between gap-2">
+									<label class="form-label mb-0 small" for="status-${entry.id}">Status</label>
+									<span class="badge ${statusBadgeClass}">${statusLabel}</span>
+								</div>
 								<select
 									id="status-${entry.id}"
 									class="form-select form-select-sm"

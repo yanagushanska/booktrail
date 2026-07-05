@@ -1,4 +1,5 @@
 import "bootstrap/dist/css/bootstrap.min.css";
+import "../styles/main.css";
 import { mountNavbar } from "../components/navbar.js";
 import { signIn } from "../services/authService.js";
 
@@ -16,8 +17,19 @@ function showAlert(message, type = "danger") {
 		return;
 	}
 
-	alertBox.className = `alert alert-${type}`;
-	alertBox.textContent = message;
+	alertBox.className = `alert alert-${type} alert-dismissible fade show`;
+	alertBox.innerHTML = "";
+
+	const messageNode = document.createElement("span");
+	messageNode.textContent = message;
+
+	const closeButton = document.createElement("button");
+	closeButton.type = "button";
+	closeButton.className = "btn-close";
+	closeButton.setAttribute("data-bs-dismiss", "alert");
+	closeButton.setAttribute("aria-label", "Close");
+
+	alertBox.append(messageNode, closeButton);
 }
 
 function hideAlert() {
@@ -26,7 +38,7 @@ function hideAlert() {
 	}
 
 	alertBox.className = "alert d-none";
-	alertBox.textContent = "";
+	alertBox.innerHTML = "";
 }
 
 if (form && emailInput && passwordInput && submitButton) {
