@@ -17,58 +17,83 @@
       <h1 class="h3 mb-3">Admin</h1>
       <div id="admin-alert" class="alert alert-info" role="alert">Checking permissions...</div>
 
-      <section id="add-book-section" class="card shadow-sm d-none" style="max-width: 720px">
-        <div class="card-body">
-          <h2 class="h5 mb-3">Add Book</h2>
+      <div id="admin-content" class="d-none">
+        <section class="card shadow-sm mb-4" style="max-width: 720px">
+          <div class="card-body">
+            <h2 class="h5 mb-3">Add Book</h2>
 
-          <form id="add-book-form" class="vstack gap-3">
-            <div>
-              <label class="form-label" for="book-title">Title</label>
-              <input class="form-control" id="book-title" type="text" required />
-            </div>
+            <form id="add-book-form" class="vstack gap-3">
+              <div>
+                <label class="form-label" for="book-title">Title</label>
+                <input class="form-control" id="book-title" type="text" required />
+              </div>
 
-            <div>
-              <label class="form-label" for="book-author">Author</label>
-              <input class="form-control" id="book-author" type="text" required />
-            </div>
+              <div>
+                <label class="form-label" for="book-author">Author</label>
+                <input class="form-control" id="book-author" type="text" required />
+              </div>
 
-            <div>
-              <label class="form-label" for="book-genre">Genre</label>
-              <input class="form-control" id="book-genre" type="text" />
-            </div>
+              <div>
+                <label class="form-label" for="book-genre">Genre</label>
+                <input class="form-control" id="book-genre" type="text" />
+              </div>
 
-            <div>
-              <label class="form-label" for="book-description">Description</label>
-              <textarea class="form-control" id="book-description" rows="4"></textarea>
-            </div>
+              <div>
+                <label class="form-label" for="book-description">Description</label>
+                <textarea class="form-control" id="book-description" rows="4"></textarea>
+              </div>
 
-            <div>
-              <label class="form-label" for="book-cover-file">Cover Image</label>
-              <input
-                class="form-control"
-                id="book-cover-file"
-                type="file"
-                accept="image/png,image/jpeg,image/webp"
-                required
+              <div>
+                <label class="form-label" for="book-cover-file">Cover Image</label>
+                <input
+                  class="form-control"
+                  id="book-cover-file"
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  required
+                />
+              </div>
+
+              <img
+                id="book-cover-preview"
+                src="https://placehold.co/240x320?text=Cover+Preview"
+                alt="Book cover preview"
+                class="rounded border"
+                width="240"
+                height="320"
+                style="object-fit: cover"
               />
+
+              <button id="add-book-submit" type="submit" class="btn btn-primary align-self-start">
+                Add Book
+              </button>
+            </form>
+          </div>
+        </section>
+
+        <section class="card shadow-sm">
+          <div class="card-body">
+            <h2 class="h5 mb-3">Books</h2>
+            <div class="table-responsive">
+              <table class="table table-striped align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th scope="col">Title</th>
+                    <th scope="col">Author</th>
+                    <th scope="col">Genre</th>
+                    <th scope="col" style="width: 180px">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="books-table-body">
+                  <tr>
+                    <td colspan="4" class="text-body-secondary">Loading books...</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-
-            <img
-              id="book-cover-preview"
-              src="https://placehold.co/240x320?text=Cover+Preview"
-              alt="Book cover preview"
-              class="rounded border"
-              width="240"
-              height="320"
-              style="object-fit: cover"
-            />
-
-            <button id="add-book-submit" type="submit" class="btn btn-primary align-self-start">
-              Add Book
-            </button>
-          </form>
-        </div>
-      </section>
+          </div>
+        </section>
+      </div>
     </main>
 
     <script type="module" src="../src/pages/admin.js"></script>
