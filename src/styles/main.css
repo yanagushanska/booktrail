@@ -1,6 +1,7 @@
 :root {
   --ink: #22201d;
   --parchment: #f6f1e7;
+  --parchment-rgb: 246, 241, 231;
   --parchment-soft: #efe7d9;
   --card-surface: #ffffff;
   --oxblood: #6e2a33;
@@ -44,6 +45,54 @@ h3,
 .navbar-custom {
   background-color: var(--parchment) !important;
   border-bottom: 1px solid var(--taupe-border);
+}
+
+.hero-photo {
+  position: relative;
+  background: url('/images/hero-books.jpg') center/cover;
+  overflow: hidden;
+}
+
+.hero-photo::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, #f6f1e7 0%, rgba(246, 241, 231, 0) 25%);
+}
+
+.hero-photo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(110, 42, 51, 0.2);
+  mix-blend-mode: multiply;
+}
+
+.hero-photo > * {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-copy {
+  --bs-navbar-color: rgba(33, 37, 41, 0.65);
+  display: inline-block;
+  max-width: 42rem;
+  padding: 1.5rem 1.75rem 1.5rem 2.0rem;
+  border-radius: 0.75rem;
+  background-color: rgba(var(--parchment-rgb), 0.84);
+}
+
+.hero-copy h1 {
+  color:#49342a !important;
+}
+
+.hero-copy p {
+  font-family: "Fraunces", serif;
+  font-size: 1.05rem;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--oxblood);
+  opacity: 0.9;
 }
 
 .btn-primary {
