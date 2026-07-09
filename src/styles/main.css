@@ -120,6 +120,33 @@ h3,
   --bs-btn-border-color: var(--oxblood);
   --bs-btn-hover-bg: #5a232b;
   --bs-btn-hover-border-color: #5a232b;
+  background-color: var(--oxblood);
+  border-color: var(--oxblood);
+  color: #fff;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active,
+.btn-primary.show {
+  background-color: #5a232b;
+  border-color: #5a232b;
+  color: #fff;
+}
+
+#add-to-library-button {
+  background-color: var(--oxblood) !important;
+  border-color: var(--oxblood) !important;
+  color: #fff !important;
+}
+
+#add-to-library-button:hover,
+#add-to-library-button:focus,
+#add-to-library-button:active,
+#add-to-library-button.show {
+  background-color: #5a232b !important;
+  border-color: #5a232b !important;
+  color: #fff !important;
 }
 
 .btn-outline-primary {
@@ -150,9 +177,9 @@ h3,
 }
 
 .badge-oxblood-soft {
-  background-color: rgba(110, 42, 51, 0.14);
-  color: var(--oxblood);
-  border: 1px solid rgba(110, 42, 51, 0.2);
+  background-color: var(--oxblood);
+  color: #fff;
+  border: 1px solid var(--oxblood);
 }
 
 .book-card {
