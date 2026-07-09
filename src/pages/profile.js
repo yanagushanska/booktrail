@@ -1,6 +1,7 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../styles/main.css";
 import { mountNavbar } from "../components/navbar.js";
+import { getReviewsByUser } from "../services/reviewsService.js";
 import { supabase } from "../services/supabaseClient.js";
 import { uploadAvatar } from "../services/storageService.js";
 import { requireAuth } from "../utils/roleGuard.js";
@@ -14,8 +15,30 @@ const fileInput = document.querySelector("#avatar-file");
 const previewImage = document.querySelector("#avatar-preview");
 const submitButton = document.querySelector("#avatar-submit");
 const alertBox = document.querySelector("#avatar-alert");
+const myReviewsAlert = document.querySelector("#my-reviews-alert");
+const myReviewsList = document.querySelector("#my-reviews-list");
+const myReviewsSummary = document.querySelector("#my-reviews-summary");
 
 let selectedFile = null;
+
+function escapeHtml(value) {
+	return String(value ?? "")
+		.replace(/&/g, "&amp;")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;")
+		.replace(/\"/g, "&quot;")
+		.replace(/'/g, "&#39;");
+}
+
+function renderStaticStars(rating) {
+	const normalizedRating = Number(rating) || 0;
+
+	return Array.from({ length: 5 }, (_unused, index) => {
+		const isFilled = index < normalizedRating;
+		const iconClass = isFilled ? "bi-star-fill text-warning" : "bi-star text-warning";
+		return `<i class="bi ${iconClass}" aria-hidden="true"></i>`;
+	}).join("");
+}
 
 function showAlert(message, type = "danger") {
 	if (!alertBox) {
@@ -44,6 +67,94 @@ function hideAlert() {
 
 	alertBox.className = "alert d-none mb-0";
 	alertBox.innerHTML = "";
+}
+
+function showMyReviewsAlert(message, type = "danger") {
+	if (!myReviewsAlert) {
+		return;
+	}
+
+	myReviewsAlert.className = `alert alert-${type} mb-0`;
+	myReviewsAlert.textContent = message;
+}
+
+function hideMyReviewsAlert() {
+	if (!myReviewsAlert) {
+		return;
+	}
+
+	myReviewsAlert.className = "alert d-none";
+	myReviewsAlert.textContent = "";
+}
+
+function renderMyReviews(reviews) {
+	if (!myReviewsList) {
+		return;
+	}
+
+	if (!reviews.length) {
+		myReviewsList.innerHTML =
+			'<div class="alert empty-state-box mb-0 d-flex align-items-center gap-2"><i class="bi bi-chat-left-dots empty-state-icon" aria-hidden="true"></i><span>You have not left any reviews yet.</span></div>';
+		return;
+	}
+
+	myReviewsList.innerHTML = reviews
+		.map((review) => {
+			const book = review.books || {};
+			const title = escapeHtml(book.title || "Untitled");
+			const author = escapeHtml(book.author || "Unknown author");
+			const coverUrl = book.cover_url ? escapeHtml(book.cover_url) : "";
+			const text = escapeHtml(review.review_text || "No written review provided.");
+			const rating = Number(review.rating) || 0;
+			const createdAt = review.created_at ? new Date(review.created_at).toLocaleString() : "Unknown date";
+
+			return `
+				<article class="card shadow-sm mb-3">
+					<div class="card-body">
+						<div class="d-flex flex-column flex-md-row gap-3">
+							<div class="flex-shrink-0 book-detail-cover-frame rounded border bg-body-tertiary" style="width: 120px;">
+								${
+									coverUrl
+										? `<img src="${coverUrl}" alt="Cover for ${title}" class="book-detail-cover" />`
+										: '<div class="d-flex align-items-center justify-content-center text-body-secondary h-100 w-100">No cover</div>'
+								}
+							</div>
+							<div class="flex-grow-1">
+								<div class="d-flex align-items-center gap-1 mb-2" aria-label="Rating ${rating} out of 5">${renderStaticStars(rating)}</div>
+								<h3 class="h6 mb-1">${title}</h3>
+								<p class="text-body-secondary mb-1">by ${author}</p>
+								<p class="mb-2">${text}</p>
+								<small class="text-body-secondary">${escapeHtml(createdAt)}</small>
+							</div>
+						</div>
+					</div>
+				</article>
+			`;
+		})
+		.join("");
+}
+
+async function loadMyReviews(userId) {
+	if (!myReviewsList) {
+		return;
+	}
+
+	hideMyReviewsAlert();
+	myReviewsList.innerHTML =
+		'<div class="alert alert-info mb-0 d-flex align-items-center gap-2"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span><span>Loading your reviews...</span></div>';
+
+	try {
+		const reviews = await getReviewsByUser(userId);
+		if (myReviewsSummary) {
+			myReviewsSummary.textContent = reviews.length
+				? `${reviews.length} review${reviews.length === 1 ? "" : "s"}`
+				: "No reviews yet";
+		}
+		renderMyReviews(reviews);
+	} catch (error) {
+		myReviewsList.innerHTML = "";
+		showMyReviewsAlert(error.message || "Unable to load your reviews.");
+	}
 }
 
 function updatePreviewFromFile(file) {
@@ -94,10 +205,12 @@ async function initProfileAvatar() {
 	if (!user?.id) {
 		showAlert("Please sign in to upload an avatar.", "warning");
 		form.classList.add("d-none");
+		showMyReviewsAlert("Please sign in to view your reviews.", "warning");
 		return;
 	}
 
 	await loadExistingAvatar(user.id);
+	await loadMyReviews(user.id);
 
 	fileInput.addEventListener("change", () => {
 		hideAlert();

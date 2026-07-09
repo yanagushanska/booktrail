@@ -87,23 +87,17 @@
       </section>
 
       <section aria-labelledby="catalog-heading">
-        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-3">
-          <h2 id="catalog-heading" class="h4 mb-0">Browse Books</h2>
-          <div class="w-100 w-md-50">
+        <div class="d-flex flex-column flex-md-row justify-content-start align-items-start align-items-md-center gap-3 mb-3">
+          <h2 id="catalog-heading" class="h4 mb-0 text-nowrap flex-shrink-0">Browse Books</h2>
+          <div class="w-100 w-md-auto catalog-search-wrap">
             <label class="form-label visually-hidden" for="book-search">Search books</label>
-            <input
-              id="book-search"
-              type="text"
-              class="form-control"
-              placeholder="Search by title or author"
-              autocomplete="off"
-            />
+            <input id="book-search" type="text" class="form-control catalog-search-input" placeholder="Search by title or author" autocomplete="off" />
           </div>
         </div>
 
         <div id="books-alert" class="alert d-none" role="alert"></div>
 
-        <div id="book-grid" class="row g-3" aria-live="polite"></div>
+        <div id="book-grid" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3" aria-live="polite"></div>
       </section>
     </main>
 

@@ -59,3 +59,43 @@ export async function getReviewsByBookId(bookId) {
 
   return data ?? [];
 }
+
+export async function getAverageRatingForBook(bookId) {
+  const { data, error } = await supabase
+    .from("reviews")
+    .select("rating")
+    .eq("book_id", bookId);
+
+  if (error) {
+    throw error;
+  }
+
+  const ratings = (data ?? [])
+    .map((review) => Number(review.rating))
+    .filter((rating) => Number.isFinite(rating));
+
+  if (!ratings.length) {
+    return { average: null, count: 0 };
+  }
+
+  const average = ratings.reduce((total, rating) => total + rating, 0) / ratings.length;
+
+  return {
+    average: Number(average.toFixed(1)),
+    count: ratings.length,
+  };
+}
+
+export async function getReviewsByUser(userId) {
+  const { data, error } = await supabase
+    .from("reviews")
+    .select("id,user_id,book_id,review_text,rating,created_at,books(id,title,author,genre,cover_url)")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw error;
+  }
+
+  return data ?? [];
+}

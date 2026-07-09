@@ -83,6 +83,55 @@ export async function addToLibrary(bookId) {
   throw error;
 }
 
+export async function getUserBookForBook(bookId) {
+  const userId = await requireUserId();
+
+  const { data, error } = await supabase
+    .from("user_books")
+    .select("id,user_id,book_id,status,rating,started_at,finished_at,created_at")
+    .eq("user_id", userId)
+    .eq("book_id", bookId)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  return data ?? null;
+}
+
+export async function markAsFinished(userId, bookId) {
+  if (!userId) {
+    throw new Error("Missing user ID.");
+  }
+
+  if (!bookId) {
+    throw new Error("Missing book ID.");
+  }
+
+  const finishedAt = new Date().toISOString().slice(0, 10);
+
+  const { data, error } = await supabase
+    .from("user_books")
+    .upsert(
+      {
+        user_id: userId,
+        book_id: bookId,
+        status: "finished",
+        finished_at: finishedAt,
+      },
+      { onConflict: "user_id,book_id" },
+    )
+    .select("id,user_id,book_id,status,rating,started_at,finished_at,created_at")
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
 export async function updateStatus(userBookId, status) {
   if (!VALID_STATUSES.has(status)) {
     throw new Error("Invalid library status.");

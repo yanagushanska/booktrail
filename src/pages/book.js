@@ -2,8 +2,16 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "../styles/main.css";
 import { mountNavbar } from "../components/navbar.js";
 import { getBookById } from "../services/booksService.js";
-import { addToLibrary } from "../services/libraryService.js";
-import { addReview, getReviewsByBookId } from "../services/reviewsService.js";
+import {
+	addToLibrary,
+	getUserBookForBook,
+	markAsFinished,
+} from "../services/libraryService.js";
+import {
+	addReview,
+	getAverageRatingForBook,
+	getReviewsByBookId,
+} from "../services/reviewsService.js";
 import { supabase } from "../services/supabaseClient.js";
 
 const navbarMount = document.querySelector("#navbar-mount");
@@ -12,6 +20,24 @@ const detailsMount = document.querySelector("#book-details");
 const reviewSectionMount = document.querySelector("#book-review-section");
 
 mountNavbar(navbarMount);
+
+const LIBRARY_STATUS_LABELS = {
+	want_to_read: "Want to Read",
+	reading: "Reading",
+	finished: "Finished",
+};
+
+function getLibraryStatusBadgeClass(status) {
+	if (status === "reading") {
+		return "status-badge--reading";
+	}
+
+	if (status === "finished") {
+		return "status-badge--finished";
+	}
+
+	return "status-badge--want";
+}
 
 function escapeHtml(value) {
 	return String(value ?? "")
@@ -61,6 +87,106 @@ function renderStaticStars(rating) {
 	}).join("");
 }
 
+function renderRatingSummary(summary) {
+	if (!reviewSectionMount) {
+		return;
+	}
+
+	const summaryMount = reviewSectionMount.querySelector("#review-summary");
+
+	if (!summaryMount) {
+		return;
+	}
+
+	if (!summary || summary.count === 0 || summary.average === null) {
+		summaryMount.innerHTML = '<div class="text-body-secondary">No ratings yet</div>';
+		return;
+	}
+
+	summaryMount.innerHTML = `
+		<div class="d-flex align-items-center gap-2 flex-wrap">
+			<div class="d-flex align-items-center gap-1" aria-label="Average rating ${summary.average} out of 5">${renderStaticStars(
+				Math.round(summary.average),
+			)}</div>
+			<span class="fw-semibold">${summary.average.toFixed(1)} ★</span>
+			<span class="text-body-secondary">(${summary.count} review${summary.count === 1 ? "" : "s"})</span>
+		</div>
+	`;
+}
+
+function renderLibraryStatus(entry) {
+	if (!detailsMount) {
+		return;
+	}
+
+	const statusMount = detailsMount.querySelector("#book-library-status");
+
+	if (!statusMount) {
+		return;
+	}
+
+	if (!entry) {
+		statusMount.innerHTML = '<span class="text-body-secondary">Not in your library yet</span>';
+		return;
+	}
+
+	const statusLabel = escapeHtml(LIBRARY_STATUS_LABELS[entry.status] || "Want to Read");
+	const statusBadgeClass = getLibraryStatusBadgeClass(entry.status);
+
+	statusMount.innerHTML = `
+		<div class="d-flex align-items-center gap-2 flex-wrap">
+			<span class="text-body-secondary">Your library status:</span>
+			<span class="badge ${statusBadgeClass}">${statusLabel}</span>
+		</div>
+	`;
+}
+
+async function refreshLibraryStatus(bookId) {
+	if (!detailsMount) {
+		return;
+	}
+
+	const statusMount = detailsMount.querySelector("#book-library-status");
+
+	if (!statusMount) {
+		return;
+	}
+
+	statusMount.innerHTML = '<span class="text-body-secondary">Loading your library status...</span>';
+
+	try {
+		const entry = await getUserBookForBook(bookId);
+		renderLibraryStatus(entry);
+	} catch (error) {
+		statusMount.innerHTML = `<span class="text-warning">${escapeHtml(
+			error.message || "Unable to load your library status.",
+		)}</span>`;
+	}
+}
+
+async function refreshRatingSummary(bookId) {
+	if (!reviewSectionMount) {
+		return;
+	}
+
+	const summaryMount = reviewSectionMount.querySelector("#review-summary");
+
+	if (!summaryMount) {
+		return;
+	}
+
+	summaryMount.innerHTML = '<div class="text-body-secondary">Loading ratings...</div>';
+
+	try {
+		const summary = await getAverageRatingForBook(bookId);
+		renderRatingSummary(summary);
+	} catch (error) {
+		summaryMount.innerHTML = `<div class="text-warning">${escapeHtml(
+			error.message || "Unable to load rating summary.",
+		)}</div>`;
+	}
+}
+
 function renderBookDetails(book) {
 	if (!detailsMount) {
 		return;
@@ -80,11 +206,11 @@ function renderBookDetails(book) {
 		<article class="card shadow-sm">
 			<div class="card-body">
 				<div class="d-flex flex-column flex-lg-row gap-4">
-					<div class="flex-shrink-0">
+					<div class="flex-shrink-0 book-detail-cover-frame rounded border bg-body-tertiary">
 						${
 							coverUrl
-								? `<img src="${coverUrl}" alt="Cover for ${title}" class="img-fluid rounded border" style="max-width: 220px;" />`
-								: '<div class="border rounded d-flex align-items-center justify-content-center text-body-secondary" style="width: 220px; height: 320px;">No cover</div>'
+								? `<img src="${coverUrl}" alt="Cover for ${title}" class="book-detail-cover" />`
+								: '<div class="d-flex align-items-center justify-content-center text-body-secondary h-100 w-100">No cover</div>'
 						}
 					</div>
 					<div class="flex-grow-1">
@@ -94,6 +220,7 @@ function renderBookDetails(book) {
 							<span class="badge badge-oxblood-soft">Genre: ${genre}</span>
 							<span class="badge badge-oxblood-soft">Published: ${year}</span>
 						</div>
+						<div id="book-library-status" class="mb-3"></div>
 						<p class="mb-4">${description}</p>
 						<button id="add-to-library-button" type="button" class="btn btn-primary">Add to Library</button>
 					</div>
@@ -193,7 +320,7 @@ async function refreshReviewList(bookId) {
 	}
 }
 
-function wireReviewForm(bookId) {
+function wireReviewForm(bookId, currentUserId) {
 	if (!reviewSectionMount) {
 		return;
 	}
@@ -245,9 +372,18 @@ function wireReviewForm(bookId) {
 
 		try {
 			await addReview(bookId, textInput.value, ratingInput.value);
+
+			try {
+				await markAsFinished(currentUserId, bookId);
+			} catch (markError) {
+				console.error("Unable to mark book as finished after review submission:", markError);
+			}
+
 			form.reset();
 			paintInputStars(0);
+			await refreshRatingSummary(bookId);
 			await refreshReviewList(bookId);
+			await refreshLibraryStatus(bookId);
 		} catch (error) {
 			submitAlert.className = "alert alert-danger alert-dismissible fade show";
 			submitAlert.innerHTML = `
@@ -284,6 +420,7 @@ async function renderReviewForm(bookId) {
 	console.log("Book page session before review form check:", session);
 
 	if (session) {
+		await refreshLibraryStatus(bookId);
 		renderReviewSection(`
 			<section class="card shadow-sm mb-3">
 				<div class="card-body">
@@ -310,15 +447,24 @@ async function renderReviewForm(bookId) {
 				</div>
 			</section>
 			<section>
-				<h2 class="h5 mb-3">Reviews</h2>
+				<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+					<h2 class="h5 mb-0">Reviews</h2>
+					<div id="review-summary" class="text-body-secondary"></div>
+				</div>
 				<div id="review-list"></div>
 			</section>
 		`);
-		wireReviewForm(bookId);
+		wireReviewForm(bookId, session.user.id);
+		await refreshRatingSummary(bookId);
 		await refreshReviewList(bookId);
 		return;
 	}
 
+	const statusMount = detailsMount.querySelector("#book-library-status");
+
+	if (statusMount) {
+		statusMount.innerHTML = '<span class="text-body-secondary">Sign in to see your library status.</span>';
+	}
 	renderReviewSection(`
 		<section class="mb-3">
 			<div class="alert alert-secondary mb-0">
@@ -327,10 +473,14 @@ async function renderReviewForm(bookId) {
 			</div>
 		</section>
 		<section>
-			<h2 class="h5 mb-3">Reviews</h2>
+			<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+				<h2 class="h5 mb-0">Reviews</h2>
+				<div id="review-summary" class="text-body-secondary"></div>
+			</div>
 			<div id="review-list"></div>
 		</section>
 	`);
+	await refreshRatingSummary(bookId);
 	await refreshReviewList(bookId);
 }
 
