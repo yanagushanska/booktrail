@@ -207,6 +207,22 @@ async function refreshRatingSummary(bookId) {
 	}
 }
 
+async function fetchReviewAuthorMap(reviews) {
+	const userIds = [...new Set((reviews ?? []).map((review) => review?.user_id).filter(Boolean).map(String))];
+
+	if (!userIds.length) {
+		return new Map();
+	}
+
+	const { data, error } = await supabase.from("profiles").select("id,username").in("id", userIds);
+
+	if (error) {
+		throw error;
+	}
+
+	return new Map((data ?? []).map((profile) => [String(profile.id), profile?.username || "Anonymous"]));
+}
+
 function renderBookDetails(book) {
 	if (!detailsMount) {
 		return;
@@ -228,12 +244,11 @@ function renderBookDetails(book) {
 			<div class="card-body">
 				<div class="d-flex flex-column flex-lg-row gap-4">
 					<div class="flex-shrink-0 book-detail-cover-frame rounded border bg-body-tertiary">
-						${
-							coverUrl
-								? `<img src="${coverUrl}" alt="Cover for ${title}" class="book-detail-cover" />`
-								: '<div class="d-flex align-items-center justify-content-center text-body-secondary h-100 w-100">No cover</div>'
-						}
-					</div>
+							${
+								coverUrl
+									? `<img src="${coverUrl}" alt="Cover for ${title}" class="book-detail-cover" />`
+									: '<div class="d-flex align-items-center justify-content-center text-body-secondary h-100 w-100">No cover</div>'
+							}
 					<div class="flex-grow-1">
 						<h1 class="h3 mb-2">${title}</h1>
 						<p class="text-body-secondary mb-3">by ${author}</p>
@@ -320,7 +335,7 @@ function renderReviewSection(content) {
 	reviewSectionMount.innerHTML = content;
 }
 
-function renderReviewItems(container, reviews) {
+function renderReviewItems(container, reviews, reviewAuthorMap = new Map()) {
 	if (!container) {
 		return;
 	}
@@ -338,12 +353,16 @@ function renderReviewItems(container, reviews) {
 			const createdAt = review.created_at
 				? new Date(review.created_at).toLocaleString()
 				: "Unknown date";
+			const reviewerName = escapeHtml(reviewAuthorMap.get(String(review.user_id)) || "Anonymous");
 
 			return `
 				<article class="card mb-2 shadow-sm">
 					<div class="card-body py-3">
-						<div class="d-flex justify-content-between align-items-center mb-2">
-							<div class="d-flex align-items-center gap-1" aria-label="Rating ${rating} out of 5">${renderStaticStars(rating)}</div>
+						<div class="d-flex justify-content-between align-items-start gap-3 mb-2 flex-wrap">
+							<div>
+								<div class="fw-semibold">${reviewerName}</div>
+								<div class="d-flex align-items-center gap-1" aria-label="Rating ${rating} out of 5">${renderStaticStars(rating)}</div>
+							</div>
 							<small class="text-body-secondary">${escapeHtml(createdAt)}</small>
 						</div>
 						<p class="mb-0">${text}</p>
@@ -369,7 +388,8 @@ async function refreshReviewList(bookId) {
 
 	try {
 		const reviews = await getReviewsByBookId(bookId);
-		renderReviewItems(listMount, reviews);
+		const reviewAuthorMap = await fetchReviewAuthorMap(reviews);
+		renderReviewItems(listMount, reviews, reviewAuthorMap);
 	} catch (error) {
 		listMount.innerHTML = `<div class="alert alert-warning mb-0">${escapeHtml(error.message || "Unable to load reviews.")}</div>`;
 	}
