@@ -314,15 +314,15 @@ function renderBookDetails(book) {
 	detailsMount.innerHTML = `
 		<article class="card shadow-sm">
 			<div class="card-body">
-				<div class="d-flex flex-column flex-lg-row gap-4">
-					<div class="flex-shrink-0 book-detail-cover-frame rounded border bg-body-tertiary">
+				<div class="book-detail-layout d-flex flex-column flex-lg-row gap-4">
+					<div class="book-detail-cover-frame flex-shrink-0 rounded border bg-body-tertiary">
 						${
 							coverUrl
 								? `<img src="${coverUrl}" alt="Cover for ${title}" class="book-detail-cover" />`
 								: '<div class="d-flex align-items-center justify-content-center text-body-secondary h-100 w-100">No cover</div>'
 						}
 					</div>
-					<div class="flex-grow-1">
+					<div class="book-detail-content flex-grow-1">
 						<h1 class="h3 mb-2">${title}</h1>
 						<p class="text-body-secondary mb-3">by ${author}</p>
 						<div class="d-flex flex-wrap gap-2 mb-3">

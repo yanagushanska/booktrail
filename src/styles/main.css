@@ -299,17 +299,27 @@ h3,
 }
 
 .book-detail-cover-frame {
-  width: 220px;
-  aspect-ratio: 2 / 3;
+  width: min(320px, 100%);
+  max-width: 320px;
+  height: auto;
   overflow: hidden;
+  flex: 0 0 auto;
 }
 
 .book-detail-cover {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
+  object-fit: contain;
   object-position: center;
   display: block;
+}
+
+.book-detail-layout {
+  align-items: flex-start;
+}
+
+.book-detail-content {
+  min-width: 0;
 }
 
 .empty-state-box {
