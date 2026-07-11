@@ -15,7 +15,7 @@ mountNavbar(navbarMount);
 const form = document.querySelector("#avatar-form");
 const fileInput = document.querySelector("#avatar-file");
 const previewImage = document.querySelector("#avatar-preview");
-const submitButton = document.querySelector("#avatar-submit");
+const submitButton = document.querySelector("#avatar-upload-button");
 const downloadButton = document.querySelector("#avatar-download-button");
 const alertBox = document.querySelector("#avatar-alert");
 const myReviewsAlert = document.querySelector("#my-reviews-alert");

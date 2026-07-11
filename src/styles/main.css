@@ -149,6 +149,36 @@ h3,
   color: #fff !important;
 }
 
+#submit-review-button {
+  background-color: var(--oxblood) !important;
+  border-color: var(--oxblood) !important;
+  color: #fff !important;
+}
+
+#submit-review-button:hover,
+#submit-review-button:focus,
+#submit-review-button:active,
+#submit-review-button.show {
+  background-color: #5a232b !important;
+  border-color: #5a232b !important;
+  color: #fff !important;
+}
+
+#avatar-upload-button {
+  background-color: var(--oxblood) !important;
+  border-color: var(--oxblood) !important;
+  color: #fff !important;
+}
+
+#avatar-upload-button:hover,
+#avatar-upload-button:focus,
+#avatar-upload-button:active,
+#avatar-upload-button.show {
+  background-color: #5a232b !important;
+  border-color: #5a232b !important;
+  color: #fff !important;
+}
+
 .btn-outline-primary {
   --bs-btn-color: var(--oxblood);
   --bs-btn-border-color: var(--oxblood);
@@ -241,6 +271,7 @@ h3,
 
 .book-card-title-row .card-title {
   display: -webkit-box;
+  line-clamp: 2;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;

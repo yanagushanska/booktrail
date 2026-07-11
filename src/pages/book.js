@@ -545,7 +545,7 @@ function wireReviewForm(bookId, currentUserId) {
 	const form = reviewSectionMount.querySelector("#review-form");
 	const ratingInput = reviewSectionMount.querySelector("#review-rating");
 	const textInput = reviewSectionMount.querySelector("#review-text");
-	const submitButton = reviewSectionMount.querySelector("#review-submit-button");
+	const submitButton = reviewSectionMount.querySelector("#submit-review-button");
 	const submitAlert = reviewSectionMount.querySelector("#review-submit-alert");
 	const starButtons = reviewSectionMount.querySelectorAll("[data-star-value]");
 
@@ -662,7 +662,7 @@ async function renderReviewForm(bookId) {
 							<label for="review-text" class="form-label">Review</label>
 							<textarea id="review-text" class="form-control" rows="4" placeholder="Share your thoughts"></textarea>
 						</div>
-						<button id="review-submit-button" type="submit" class="btn btn-primary w-100 w-md-auto">Submit Review</button>
+						<button id="submit-review-button" type="submit" class="btn btn-primary w-100 w-md-auto">Submit Review</button>
 					</form>
 				</div>
 			</section>
