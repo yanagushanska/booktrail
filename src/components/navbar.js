@@ -1,5 +1,5 @@
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
-import { signOut } from "../services/authService.js";
+import { getCurrentUserRole, signOut } from "../services/authService.js";
 import { supabase } from "../services/supabaseClient.js";
 
 export function renderNavbar() {
@@ -32,6 +32,9 @@ export function renderNavbar() {
               <a class="nav-link" href="/pages/profile.html"><i class="bi bi-person me-1" aria-hidden="true"></i>Profile</a>
             </li>
             <li class="nav-item">
+              <a class="nav-link d-none" href="/pages/admin.html" data-auth="admin"><i class="bi bi-shield-lock me-1" aria-hidden="true"></i>Admin</a>
+            </li>
+            <li class="nav-item">
               <a class="nav-link" href="/pages/login.html" data-auth="guest"><i class="bi bi-box-arrow-in-right me-1" aria-hidden="true"></i>Login</a>
             </li>
             <li class="nav-item">
@@ -50,6 +53,7 @@ export function renderNavbar() {
 function setAuthLinksVisibility(mountNode, hasSession) {
   const guestLinks = mountNode.querySelectorAll('[data-auth="guest"]');
   const authLinks = mountNode.querySelectorAll('[data-auth="auth"]');
+  const adminLinks = mountNode.querySelectorAll('[data-auth="admin"]');
 
   guestLinks.forEach((link) => {
     link.classList.toggle("d-none", hasSession);
@@ -57,6 +61,18 @@ function setAuthLinksVisibility(mountNode, hasSession) {
 
   authLinks.forEach((link) => {
     link.classList.toggle("d-none", !hasSession);
+  });
+
+  adminLinks.forEach((link) => {
+    link.classList.toggle("d-none", !hasSession);
+  });
+}
+
+function setAdminLinkVisibility(mountNode, isAdmin) {
+  const adminLinks = mountNode.querySelectorAll('[data-auth="admin"]');
+
+  adminLinks.forEach((link) => {
+    link.classList.toggle("d-none", !isAdmin);
   });
 }
 
@@ -91,11 +107,24 @@ export function mountNavbar(mountNode) {
     } = await supabase.auth.getSession();
 
     setAuthLinksVisibility(mountNode, Boolean(session));
+
+    if (!session) {
+      setAdminLinkVisibility(mountNode, false);
+      return;
+    }
+
+    try {
+      const { role } = await getCurrentUserRole();
+      setAdminLinkVisibility(mountNode, role === "admin");
+    } catch (error) {
+      console.error("Unable to load current user role", error);
+      setAdminLinkVisibility(mountNode, false);
+    }
   };
 
   syncAuthState();
 
-  supabase.auth.onAuthStateChange((_event, session) => {
-    setAuthLinksVisibility(mountNode, Boolean(session));
+  supabase.auth.onAuthStateChange(() => {
+    syncAuthState();
   });
 }
