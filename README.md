@@ -97,4 +97,4 @@ npm run dev
 - Personal library with want-to-read / reading / finished shelves
 - Book reviews and ratings
 - Profile with avatar upload
-- Admin panel: manage books (with cover image upload) and user roles
+- Admin panel: manage books (with cover image upload and download) and user roles
