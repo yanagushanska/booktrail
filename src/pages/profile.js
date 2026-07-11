@@ -5,6 +5,7 @@ import { getReviewsByUser } from "../services/reviewsService.js";
 import { supabase } from "../services/supabaseClient.js";
 import { uploadAvatar } from "../services/storageService.js";
 import { requireAuth } from "../utils/roleGuard.js";
+import { downloadImageFromUrl } from "../utils/downloadImage.js";
 
 await requireAuth();
 
@@ -14,12 +15,14 @@ const form = document.querySelector("#avatar-form");
 const fileInput = document.querySelector("#avatar-file");
 const previewImage = document.querySelector("#avatar-preview");
 const submitButton = document.querySelector("#avatar-submit");
+const downloadButton = document.querySelector("#avatar-download-button");
 const alertBox = document.querySelector("#avatar-alert");
 const myReviewsAlert = document.querySelector("#my-reviews-alert");
 const myReviewsList = document.querySelector("#my-reviews-list");
 const myReviewsSummary = document.querySelector("#my-reviews-summary");
 
 let selectedFile = null;
+let currentAvatarUrl = "";
 
 function escapeHtml(value) {
 	return String(value ?? "")
@@ -67,6 +70,16 @@ function hideAlert() {
 
 	alertBox.className = "alert d-none mb-0";
 	alertBox.innerHTML = "";
+}
+
+function updateAvatarDownloadButton() {
+	if (!downloadButton) {
+		return;
+	}
+
+	const canDownload = Boolean(currentAvatarUrl);
+	downloadButton.classList.toggle("d-none", !canDownload);
+	downloadButton.disabled = !canDownload;
 }
 
 function showMyReviewsAlert(message, type = "danger") {
@@ -178,12 +191,19 @@ async function loadExistingAvatar(userId) {
 		.single();
 
 	if (error) {
+		currentAvatarUrl = "";
+		updateAvatarDownloadButton();
 		return;
 	}
 
 	if (data?.avatar_url) {
+		currentAvatarUrl = data.avatar_url;
 		previewImage.src = data.avatar_url;
+	} else {
+		currentAvatarUrl = "";
 	}
+
+	updateAvatarDownloadButton();
 }
 
 async function initProfileAvatar() {
@@ -205,12 +225,33 @@ async function initProfileAvatar() {
 	if (!user?.id) {
 		showAlert("Please sign in to upload an avatar.", "warning");
 		form.classList.add("d-none");
+		currentAvatarUrl = "";
+		updateAvatarDownloadButton();
 		showMyReviewsAlert("Please sign in to view your reviews.", "warning");
 		return;
 	}
 
 	await loadExistingAvatar(user.id);
 	await loadMyReviews(user.id);
+	updateAvatarDownloadButton();
+
+	if (downloadButton) {
+		downloadButton.addEventListener("click", async () => {
+			if (!currentAvatarUrl) {
+				return;
+			}
+
+			downloadButton.disabled = true;
+
+			try {
+				await downloadImageFromUrl(currentAvatarUrl, "avatar.png");
+			} catch (error) {
+				showAlert(error.message || "Unable to download the avatar.");
+			} finally {
+				updateAvatarDownloadButton();
+			}
+		});
+	}
 
 	fileInput.addEventListener("change", () => {
 		hideAlert();
@@ -245,7 +286,9 @@ async function initProfileAvatar() {
 
 		try {
 			const publicUrl = await uploadAvatar(selectedFile, user.id);
+			currentAvatarUrl = publicUrl;
 			previewImage.src = publicUrl;
+			updateAvatarDownloadButton();
 			showAlert("Avatar uploaded successfully.", "success");
 		} catch (error) {
 			showAlert(error.message || "Avatar upload failed. Please try again.");

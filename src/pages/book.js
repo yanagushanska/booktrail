@@ -13,11 +13,15 @@ import {
 	getReviewsByBookId,
 } from "../services/reviewsService.js";
 import { supabase } from "../services/supabaseClient.js";
+import { downloadImageFromUrl } from "../utils/downloadImage.js";
 
 const navbarMount = document.querySelector("#navbar-mount");
 const alertBox = document.querySelector("#book-alert");
 const detailsMount = document.querySelector("#book-details");
 const reviewSectionMount = document.querySelector("#book-review-section");
+
+let currentBookCoverUrl = "";
+let bookDownloadAllowed = false;
 
 mountNavbar(navbarMount);
 
@@ -75,6 +79,22 @@ function hideAlert() {
 
 	alertBox.className = "alert d-none";
 	alertBox.innerHTML = "";
+}
+
+function updateBookCoverDownloadButton() {
+	if (!detailsMount) {
+		return;
+	}
+
+	const downloadButton = detailsMount.querySelector("#book-cover-download-button");
+
+	if (!downloadButton) {
+		return;
+	}
+
+	const canDownload = bookDownloadAllowed && Boolean(currentBookCoverUrl);
+	downloadButton.classList.toggle("d-none", !canDownload);
+	downloadButton.disabled = !canDownload;
 }
 
 function renderStaticStars(rating) {
@@ -201,6 +221,7 @@ function renderBookDetails(book) {
 			: escapeHtml(book.published_year);
 	const description = escapeHtml(book?.description || "No description available.");
 	const coverUrl = book?.cover_url ? escapeHtml(book.cover_url) : "";
+	currentBookCoverUrl = book?.cover_url || "";
 
 	detailsMount.innerHTML = `
 		<article class="card shadow-sm">
@@ -222,12 +243,18 @@ function renderBookDetails(book) {
 						</div>
 						<div id="book-library-status" class="mb-3"></div>
 						<p class="mb-4">${description}</p>
-						<button id="add-to-library-button" type="button" class="btn btn-primary">Add to Library</button>
+						<div class="d-flex flex-wrap gap-2">
+							<button id="add-to-library-button" type="button" class="btn btn-primary">Add to Library</button>
+							<button id="book-cover-download-button" type="button" class="btn btn-outline-primary d-none" disabled>
+								Download Cover
+							</button>
+						</div>
 					</div>
 				</div>
 			</div>
 		</article>
 	`;
+	updateBookCoverDownloadButton();
 }
 
 function wireAddToLibrary(bookId) {
@@ -252,6 +279,34 @@ function wireAddToLibrary(bookId) {
 			showAlert(error.message || "Could not add this book to your library.");
 		} finally {
 			addButton.disabled = false;
+		}
+	});
+}
+
+function wireBookCoverDownload() {
+	if (!detailsMount) {
+		return;
+	}
+
+	const downloadButton = detailsMount.querySelector("#book-cover-download-button");
+
+	if (!downloadButton) {
+		return;
+	}
+
+	downloadButton.addEventListener("click", async () => {
+		if (!bookDownloadAllowed || !currentBookCoverUrl) {
+			return;
+		}
+
+		downloadButton.disabled = true;
+
+		try {
+			await downloadImageFromUrl(currentBookCoverUrl, "book-cover.png");
+		} catch (error) {
+			showAlert(error.message || "Unable to download the cover image.");
+		} finally {
+			updateBookCoverDownloadButton();
 		}
 	});
 }
@@ -420,6 +475,8 @@ async function renderReviewForm(bookId) {
 	console.log("Book page session before review form check:", session);
 
 	if (session) {
+		bookDownloadAllowed = true;
+		updateBookCoverDownloadButton();
 		await refreshLibraryStatus(bookId);
 		renderReviewSection(`
 			<section class="card shadow-sm mb-3">
@@ -459,6 +516,9 @@ async function renderReviewForm(bookId) {
 		await refreshReviewList(bookId);
 		return;
 	}
+
+	bookDownloadAllowed = false;
+	updateBookCoverDownloadButton();
 
 	const statusMount = detailsMount.querySelector("#book-library-status");
 
@@ -513,6 +573,7 @@ async function loadBook() {
 
 		renderBookDetails(book);
 		wireAddToLibrary(book.id);
+		wireBookCoverDownload();
 		await renderReviewForm(book.id);
 	} catch (error) {
 		showAlert(error.message || "Failed to load book details.");
