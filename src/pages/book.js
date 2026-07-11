@@ -1,4 +1,5 @@
 import "bootstrap/dist/css/bootstrap.min.css";
+import * as bootstrap from "bootstrap";
 import "../styles/main.css";
 import { mountNavbar } from "../components/navbar.js";
 import { getBookById } from "../services/booksService.js";
@@ -21,7 +22,10 @@ const detailsMount = document.querySelector("#book-details");
 const reviewSectionMount = document.querySelector("#book-review-section");
 
 let currentBookCoverUrl = "";
+let currentBookId = null;
 let bookDownloadAllowed = false;
+let shelfModalInstance = null;
+let successToastInstance = null;
 
 mountNavbar(navbarMount);
 
@@ -81,6 +85,43 @@ function hideAlert() {
 	alertBox.innerHTML = "";
 }
 
+function showSuccessToast(message) {
+	if (!detailsMount) {
+		return;
+	}
+
+	const toastElement = detailsMount.querySelector("#book-success-toast");
+	const toastBody = detailsMount.querySelector("#book-success-toast-body");
+
+	if (!toastElement || !toastBody) {
+		return;
+	}
+
+	toastBody.textContent = message;
+	toastElement.setAttribute("aria-label", message);
+	toastElement.classList.remove("show");
+
+	successToastInstance = successToastInstance || bootstrap.Toast.getOrCreateInstance(toastElement, { delay: 3000 });
+	successToastInstance.show();
+}
+
+function openShelfModal() {
+	if (!detailsMount) {
+		return;
+	}
+
+	const modalElement = detailsMount.querySelector("#add-to-library-modal");
+	const selectElement = detailsMount.querySelector("#shelf-status-select");
+
+	if (!modalElement || !selectElement) {
+		return;
+	}
+
+	selectElement.value = "want_to_read";
+	shelfModalInstance = shelfModalInstance || bootstrap.Modal.getOrCreateInstance(modalElement);
+	shelfModalInstance.show();
+}
+
 function updateBookCoverDownloadButton() {
 	if (!detailsMount) {
 		return;
@@ -95,6 +136,36 @@ function updateBookCoverDownloadButton() {
 	const canDownload = bookDownloadAllowed && Boolean(currentBookCoverUrl);
 	downloadButton.classList.toggle("d-none", !canDownload);
 	downloadButton.disabled = !canDownload;
+}
+
+function showAddToLibraryLoginPrompt() {
+	if (!detailsMount) {
+		return;
+	}
+
+	const statusMount = detailsMount.querySelector("#book-library-status");
+
+	if (!statusMount) {
+		return;
+	}
+
+	statusMount.innerHTML = `
+		<div class="alert alert-secondary mb-0">
+			Log in to add this book to your library.
+			<a href="/pages/login.html" class="alert-link">Go to login</a>.
+		</div>
+	`;
+}
+
+function getSelectedShelfStatus() {
+	if (!detailsMount) {
+		return "want_to_read";
+	}
+
+	const selectElement = detailsMount.querySelector("#shelf-status-select");
+	const selectedStatus = selectElement?.value || "want_to_read";
+
+	return selectedStatus;
 }
 
 function renderStaticStars(rating) {
@@ -237,6 +308,7 @@ function renderBookDetails(book) {
 			: escapeHtml(book.published_year);
 	const description = escapeHtml(book?.description || "No description available.");
 	const coverUrl = book?.cover_url ? escapeHtml(book.cover_url) : "";
+	currentBookId = book?.id || null;
 	currentBookCoverUrl = book?.cover_url || "";
 
 	detailsMount.innerHTML = `
@@ -244,11 +316,12 @@ function renderBookDetails(book) {
 			<div class="card-body">
 				<div class="d-flex flex-column flex-lg-row gap-4">
 					<div class="flex-shrink-0 book-detail-cover-frame rounded border bg-body-tertiary">
-							${
-								coverUrl
-									? `<img src="${coverUrl}" alt="Cover for ${title}" class="book-detail-cover" />`
-									: '<div class="d-flex align-items-center justify-content-center text-body-secondary h-100 w-100">No cover</div>'
-							}
+						${
+							coverUrl
+								? `<img src="${coverUrl}" alt="Cover for ${title}" class="book-detail-cover" />`
+								: '<div class="d-flex align-items-center justify-content-center text-body-secondary h-100 w-100">No cover</div>'
+						}
+					</div>
 					<div class="flex-grow-1">
 						<h1 class="h3 mb-2">${title}</h1>
 						<p class="text-body-secondary mb-3">by ${author}</p>
@@ -268,11 +341,50 @@ function renderBookDetails(book) {
 				</div>
 			</div>
 		</article>
+		<div class="modal fade" id="add-to-library-modal" tabindex="-1" aria-labelledby="add-to-library-modal-title" aria-hidden="true">
+			<div class="modal-dialog modal-sm modal-dialog-centered">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h2 class="modal-title fs-5" id="add-to-library-modal-title">Choose a shelf</h2>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						<label for="shelf-status-select" class="form-label">Library status</label>
+						<select id="shelf-status-select" class="form-select">
+							<option value="want_to_read" selected>Want to Read</option>
+							<option value="reading">Reading</option>
+							<option value="finished">Finished</option>
+						</select>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+						<button id="shelf-confirm-button" type="button" class="btn btn-primary">Confirm</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1080;">
+			<div id="book-success-toast" class="toast" role="status" aria-live="polite" aria-atomic="true" data-bs-autohide="true" data-bs-delay="3000">
+				<div class="toast-header">
+					<strong class="me-auto">BookTrail</strong>
+					<button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+				</div>
+				<div id="book-success-toast-body" class="toast-body">Saved.</div>
+			</div>
+		</div>
 	`;
 	updateBookCoverDownloadButton();
 }
 
-function wireAddToLibrary(bookId) {
+async function getCurrentSession() {
+	const {
+		data: { session },
+	} = await supabase.auth.getSession();
+
+	return session;
+}
+
+function wireAddToLibrary() {
 	if (!detailsMount) {
 		return;
 	}
@@ -284,17 +396,14 @@ function wireAddToLibrary(bookId) {
 	}
 
 	addButton.addEventListener("click", async () => {
-		hideAlert();
-		addButton.disabled = true;
+		const session = await getCurrentSession();
 
-		try {
-			await addToLibrary(bookId);
-			showAlert("Book added to your library.", "success");
-		} catch (error) {
-			showAlert(error.message || "Could not add this book to your library.");
-		} finally {
-			addButton.disabled = false;
+		if (!session) {
+			showAddToLibraryLoginPrompt();
+			return;
 		}
+
+		openShelfModal();
 	});
 }
 
@@ -307,6 +416,39 @@ function wireBookCoverDownload() {
 
 	if (!downloadButton) {
 		return;
+	}
+
+	const modalElement = detailsMount.querySelector("#add-to-library-modal");
+	const confirmButton = detailsMount.querySelector("#shelf-confirm-button");
+	const selectElement = detailsMount.querySelector("#shelf-status-select");
+
+	if (modalElement && confirmButton && selectElement) {
+		modalElement.addEventListener("show.bs.modal", () => {
+			selectElement.value = "want_to_read";
+		});
+
+		confirmButton.addEventListener("click", async () => {
+			hideAlert();
+			confirmButton.disabled = true;
+
+			try {
+				if (!currentBookId) {
+					throw new Error("Missing book id.");
+				}
+
+				const selectedStatus = getSelectedShelfStatus();
+				await addToLibrary(currentBookId, selectedStatus);
+				if (shelfModalInstance) {
+					shelfModalInstance.hide();
+				}
+				await refreshLibraryStatus(currentBookId);
+				showSuccessToast("Book added to your library.");
+			} catch (error) {
+				showAlert(error.message || "Could not add this book to your library.");
+			} finally {
+				confirmButton.disabled = false;
+			}
+		});
 	}
 
 	downloadButton.addEventListener("click", async () => {
@@ -459,6 +601,7 @@ function wireReviewForm(bookId, currentUserId) {
 			await refreshRatingSummary(bookId);
 			await refreshReviewList(bookId);
 			await refreshLibraryStatus(bookId);
+			showSuccessToast("Review submitted successfully.");
 		} catch (error) {
 			submitAlert.className = "alert alert-danger alert-dismissible fade show";
 			submitAlert.innerHTML = `
@@ -592,7 +735,7 @@ async function loadBook() {
 		}
 
 		renderBookDetails(book);
-		wireAddToLibrary(book.id);
+		wireAddToLibrary();
 		wireBookCoverDownload();
 		await renderReviewForm(book.id);
 	} catch (error) {

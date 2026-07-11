@@ -1,4 +1,5 @@
 import "bootstrap/dist/css/bootstrap.min.css";
+import * as bootstrap from "bootstrap";
 import "../styles/main.css";
 import { mountNavbar } from "../components/navbar.js";
 import { signUp } from "../services/authService.js";

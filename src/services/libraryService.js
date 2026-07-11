@@ -46,41 +46,30 @@ export async function getUserBooks(status) {
   return data ?? [];
 }
 
-export async function addToLibrary(bookId) {
+export async function addToLibrary(bookId, status = "want_to_read") {
+  if (!VALID_STATUSES.has(status)) {
+    throw new Error("Invalid library status.");
+  }
+
   const userId = await requireUserId();
 
   const payload = {
     user_id: userId,
     book_id: bookId,
-    status: "want_to_read",
+    status,
   };
 
   const { data, error } = await supabase
     .from("user_books")
-    .insert(payload)
+    .upsert(payload, { onConflict: "user_id,book_id" })
     .select("id,user_id,book_id,status,rating,started_at,finished_at,created_at")
     .single();
 
-  if (!error) {
-    return data;
+  if (error) {
+    throw error;
   }
 
-  if (error.code === "23505") {
-    const { data: existingData, error: existingError } = await supabase
-      .from("user_books")
-      .select("id,user_id,book_id,status,rating,started_at,finished_at,created_at")
-      .eq("user_id", userId)
-      .eq("book_id", bookId)
-      .single();
-
-    if (existingError) {
-      throw existingError;
-    }
-
-    return existingData;
-  }
-
-  throw error;
+  return data;
 }
 
 export async function getUserBookForBook(bookId) {

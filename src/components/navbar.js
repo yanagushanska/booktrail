@@ -1,6 +1,8 @@
-import "bootstrap/dist/js/bootstrap.bundle.min.js";
+import * as bootstrap from "bootstrap";
 import { getCurrentUserRole, signOut } from "../services/authService.js";
 import { supabase } from "../services/supabaseClient.js";
+
+void bootstrap;
 
 export function renderNavbar() {
   return `
