@@ -10,7 +10,11 @@ export async function downloadImageFromUrl(url, filename) {
 	}
 
 	const blob = await response.blob();
-	const objectUrl = URL.createObjectURL(blob);
+	const downloadBlob =
+		blob.type === "application/octet-stream"
+			? blob
+			: new Blob([blob], { type: "application/octet-stream" });
+	const objectUrl = URL.createObjectURL(downloadBlob);
 	const link = document.createElement("a");
 
 	link.href = objectUrl;

@@ -42,6 +42,14 @@ function hideAlert() {
 	alertBox.innerHTML = "";
 }
 
+function getErrorMessage(error, fallbackMessage) {
+	if (typeof error?.message === "string" && error.message.trim()) {
+		return error.message;
+	}
+
+	return fallbackMessage;
+}
+
 if (form && emailInput && passwordInput && submitButton) {
 	form.addEventListener("submit", async (event) => {
 		event.preventDefault();
@@ -61,7 +69,7 @@ if (form && emailInput && passwordInput && submitButton) {
 			await signUp(email, password);
 			window.location.href = "./login.html";
 		} catch (error) {
-			showAlert(error.message || "Sign up failed. Please try again.");
+			showAlert(getErrorMessage(error, "Something went wrong, please try again."));
 		} finally {
 			submitButton.disabled = false;
 		}
