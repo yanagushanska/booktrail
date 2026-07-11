@@ -6,11 +6,11 @@ Built as a capstone project for Software Technologies with AI.
 
 ## Live Demo
 
-[your Netlify URL here]
+(https://booktrailproject.netlify.app)
 
 **Demo credentials:**
-- Regular user: `[demo email]` / `[demo password]`
-- Admin user: `[demo admin email]` / `[demo password]`
+- Regular user: `[user@gmail.com]` / `[user123]`
+- Admin user: `[admin@gmail.com]` / `[admin123]`
 
 ## Architecture
 
