@@ -95,7 +95,7 @@ npm run dev
 - Email/password authentication
 - Browse and search the book catalog
 - Personal library with want-to-read / reading / finished shelves
-- Book reviews and ratings
+- Book reviews and ratings (if a profile is deleted the reviews left by it stay under 'Anonymous')
 - Profile with avatar upload
 - Admin panel: manage books (with cover image upload and download) and user roles
 
