@@ -98,3 +98,19 @@ npm run dev
 - Book reviews and ratings
 - Profile with avatar upload
 - Admin panel: manage books (with cover image upload and download) and user roles
+
+  ## User Roles
+
+| Action | Public (logged out) | Regular User | Admin |
+|---|:---:|:---:|:---:|
+| Browse and search the book catalog | ✅ | ✅ | ✅ |
+| View book details, ratings, and reviews | ✅ | ✅ | ✅ |
+| Register / log in | ✅ | — | — |
+| Add books to personal library (shelves) | ❌ | ✅ | ✅ |
+| Rate and review books | ❌ | ✅ | ✅ |
+| Edit own profile and upload/download avatar | ❌ | ✅ | ✅ |
+| Add new books to the catalog (with cover upload) | ❌ | ❌ | ✅ |
+| Edit or delete any book in the catalog | ❌ | ❌ | ✅ |
+| View all registered users | ❌ | ❌ | ✅ |
+| Change any user's role (promote/demote admin) | ❌ | ❌ | ✅ |
+| Access the Admin Panel | ❌ | ❌ | ✅ |
